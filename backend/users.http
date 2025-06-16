@@ -1,0 +1,14 @@
+POST http://localhost:3000/users/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Deivid",
+  "last_name": "vargas",
+  "email": "deivid@gmail.com",
+  "password": "password123",
+  "role": "admin"
+}
+
+### 
+
+GET http://localhost:3000/users HTTP/1.1
