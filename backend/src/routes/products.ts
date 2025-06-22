@@ -12,23 +12,16 @@ import { Router } from 'express'
 export const productRouter = Router()
 
 productRouter.get('/', getProducts)
-
 productRouter.get('/:id', getProductById)
+productRouter.get('/category/:id_category', getProductByCategory)
 
-productRouter.get('/category/:categoryId', getProductByCategory)
-
-productRouter.post(
-  '/products',
-  upload.array('images', 5),
-  convertToWebP,
-  createProduct
-)
+productRouter.post('/', upload.array('images', 5), convertToWebP, createProduct)
 
 productRouter.patch(
-  '/products/:id',
-  upload.array('newImages', 5),
+  '/:id',
+  upload.array('images', 5),
   convertToWebP,
   updateProduct
 )
 
-productRouter.delete('/products/:id', deleteProduct)
+productRouter.delete('/:id', deleteProduct)

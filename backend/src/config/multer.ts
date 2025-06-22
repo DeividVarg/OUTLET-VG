@@ -27,19 +27,35 @@ const convertToWebP = async (
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.file) return next()
+  const files = req.files as Express.Multer.File[]
+
+  if (!files || files.length === 0) return next()
+
+  const uploadDir = path.join(__dirname, '..', '..', 'uploads')
 
   try {
-    const webpFilename = `${Date.now()}.webp`
-    await sharp(req.file.buffer)
-      .webp({ quality: 80 })
-      .toFile(`uploads/${webpFilename}`)
+    // Crear la carpeta si no existe
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true })
+    }
 
-    req.file.filename = webpFilename
-    req.file.path = `uploads/${webpFilename}`
+    const convertedFiles: string[] = []
 
+    for (const file of files) {
+      const timestamp = Date.now()
+      const cleanName = file.originalname.split('.')[0]
+      const webpFilename = `${timestamp}-${cleanName}.webp`
+      const outputPath = path.join(uploadDir, webpFilename)
+
+      await sharp(file.buffer).webp({ quality: 80 }).toFile(outputPath)
+
+      convertedFiles.push(webpFilename)
+    }
+
+    req.body.images = convertedFiles
     next()
   } catch (err) {
+    console.error('Error al convertir imágenes:', err)
     next(err)
   }
 }

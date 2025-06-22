@@ -1,6 +1,7 @@
 import { db } from '../config/db'
 import { response } from '../utils/response'
 import { Request, Response } from 'express'
+import { CreateCategorySchema, UpdateCategorySchema } from '../schemas/category'
 
 export const GetCategories = async (req: Request, res: Response) => {
   try {
@@ -31,7 +32,7 @@ export const GetCategories = async (req: Request, res: Response) => {
 
 export const GetCategoryById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.body
+    const { id } = req.params
     const { rows } = await db.query('SELECT * FROM CATEGORIES WHERE id = $1', [
       id,
     ])
@@ -61,12 +62,24 @@ export const GetCategoryById = async (req: Request, res: Response) => {
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, description } = req.body
+    const result = CreateCategorySchema.safeParse(req.body)
+
+    if (!result.success) {
+      return response({
+        res,
+        code: 400,
+        message: 'Invalid category data',
+        data: result.error.errors,
+      })
+    }
+
+    const { name, description } = result.data
 
     const { rows } = await db.query(
-      'INSERT INTO CATEGORIES (name, description) VALUES ($1, $2)',
+      'INSERT INTO categories (name, description) VALUES ($1, $2)',
       [name, description]
     )
+
     return response({
       res,
       code: 200,
@@ -85,12 +98,56 @@ export const createCategory = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { id, name, description } = req.body
+    const { id } = req.params
 
-    const { rows } = await db.query(
-      'UPDATE CATEGORIES SET name = $1, description = $2 WHERE id = $3',
-      [name, description, id]
-    )
+    const result = UpdateCategorySchema.safeParse(req.body)
+
+    if (!result.success) {
+      return response({
+        res,
+        code: 400,
+        message: 'Invalid category data',
+        data: result.error.errors,
+      })
+    }
+
+    const { name, description } = result.data
+
+    const updates = []
+    const values = []
+    let paramIndex = 1
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex}`)
+      values.push(name)
+      paramIndex++
+    }
+
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex}`)
+      values.push(description)
+      paramIndex++
+    }
+
+    if (updates.length === 0) {
+      return response({
+        res,
+        code: 500,
+        message: 'error trying update category',
+        data: null,
+      })
+    }
+
+    values.push(id)
+
+    const query = `
+      UPDATE categories 
+      SET ${updates.join(', ')}, updated_at = NOW() 
+      WHERE id = $${paramIndex}
+    `
+
+    const { rows } = await db.query(query, values)
+
     return response({
       res,
       code: 200,
@@ -109,11 +166,12 @@ export const updateCategory = async (req: Request, res: Response) => {
 
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
-    const { id } = req.body
+    const { id } = req.params
 
-    const { rows } = await db.query('DELETE FROM CATEGORIES WHERE id = $1', [
+    const { rows } = await db.query('DELETE FROM categories WHERE id = $1', [
       id,
     ])
+
     return response({
       res,
       code: 200,

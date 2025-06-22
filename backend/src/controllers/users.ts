@@ -3,7 +3,11 @@ import { response } from '../utils/response'
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import { RegisterSchema } from '../../schemas/users'
+import {
+  RegisterSchema,
+  LoginSchema,
+  UpdateUserSchema,
+} from '../schemas/users'
 
 const JwtSecretUser = process.env.JWT_SECRET_USER || 'defaultTokenSecret'
 const JwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h'
@@ -43,7 +47,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [id])
 
-    if (!rows) {
+    if (rows.length === 0) {
       return response({
         res,
         code: 404,
@@ -72,7 +76,8 @@ export const getUserByEmail = async (req: Request, res: Response) => {
   try {
     const { email } = req.params
 
-    console.log('getUserByEmail called with email:', email)
+    console.log('hello from get user by email')
+    console.log(email)
 
     if (!email) {
       return response({
@@ -86,7 +91,7 @@ export const getUserByEmail = async (req: Request, res: Response) => {
     const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [
       email,
     ])
-    if (!rows) {
+    if (rows.length === 0) {
       return response({
         res,
         code: 404,
@@ -111,14 +116,8 @@ export const getUserByEmail = async (req: Request, res: Response) => {
 }
 
 export const Register = async (req: Request, res: Response) => {
-  console.log('reguister init')
   try {
-    console.log('reguister init')
-    const result = RegisterSchema.safeParse(req.body)
-
-    console.log('Register result:', result)
-
-    console.log('Register body:', req.body)
+    const result = RegisterSchema.shape.body.safeParse(req.body)
 
     if (!result.success) {
       const errors = result.error.flatten().fieldErrors
@@ -130,7 +129,16 @@ export const Register = async (req: Request, res: Response) => {
       })
     }
 
-    const { name, last_name, email, password, role } = result.data.body
+    const { name, last_name, email, password, password2, role } = result.data
+
+    if (password !== password2) {
+      return response({
+        res,
+        code: 400,
+        message: 'Las contraseñas no coinciden',
+        data: null,
+      })
+    }
 
     if (!name || !email || !password || !last_name || !role) {
       return response({
@@ -186,16 +194,19 @@ export const Register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body
+    const result = LoginSchema.shape.body.safeParse(req.body)
 
-    if (!email || !password) {
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors
       return response({
         res,
         code: 400,
         message: 'email and password are required',
-        data: null,
+        data: { errors },
       })
     }
+
+    const { email, password } = result.data
 
     const { rows } = await db.query('SELECT * FROM users WHERE email = $1', [
       email,
@@ -307,9 +318,20 @@ export const logout = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
-    const updateData = req.body
 
-    delete updateData.id
+    const result = UpdateUserSchema.shape.body.safeParse(req.body)
+
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors
+      return response({
+        res,
+        code: 400,
+        message: 'email and password are required',
+        data: { errors },
+      })
+    }
+
+    const updateData = result.data
 
     if (Object.keys(updateData).length === 0) {
       return response({
@@ -319,6 +341,7 @@ export const updateUser = async (req: Request, res: Response) => {
         data: null,
       })
     }
+
     const setClause = Object.keys(updateData)
       .map((key, index) => `${key} = $${index + 1}`)
       .join(', ')
@@ -329,7 +352,7 @@ export const updateUser = async (req: Request, res: Response) => {
     const query = `
       UPDATE users 
       SET ${setClause} 
-      WHERE id = ${id}
+      WHERE id = $${values.length}
       RETURNING *
     `
 

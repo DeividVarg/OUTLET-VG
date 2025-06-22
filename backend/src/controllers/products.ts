@@ -2,93 +2,101 @@ import { db } from '../config/db'
 import { response } from '../utils/response'
 import { Request, Response } from 'express'
 import { upload, convertToWebP } from '../config/multer'
+import { productoSchema, updateProductoSchema } from '../schemas/products'
+import { z } from 'zod'
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, price, state, category_id } = req.body
+    console.log(req.body)
+    const preprocessedData = {
+      ...req.body,
+      price: Number(req.body.price),
+      category_id: req.body.category_id.trim(),
+      images: req.body.images,
+    }
+    const result = productoSchema.safeParse(preprocessedData)
 
-    const { rows } = await db.query(
-      `
-      INSERT INTO products (name, description, price, state, category_id)
-      VALUES ($1, $2, $3, $4, $5)
-    `,
-      [name, description, price, state, category_id]
-    )
-
-    if (!rows) {
+    if (!result.success) {
       return response({
         res,
         code: 400,
-        message: 'product not created',
+        message: 'Invalid product data',
+        data: result.error.errors,
+      })
+    }
+
+    const { name, description, price, state, category_id, images } = result.data
+
+    const { rows } = await db.query(
+      `INSERT INTO products (name, description, price, state, category_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, now())
+       RETURNING id`,
+      [name, description, price, state, category_id]
+    )
+
+    if (!rows || !rows[0]) {
+      return response({
+        res,
+        code: 400,
+        message: 'Product not created',
         data: null,
       })
     }
 
     const productId = rows[0].id
-    const images = req.body.images
 
-    const imageIds = []
-
-    if (!images) {
-      return response({
-        res,
-        code: 400,
-        message: 'no images, try again',
-        data: null,
-      })
-    }
-
-    for (const image of images) {
-      const imageUrl = `/uploads/${image.filename}`
-
-      const imageResult = await db.query(
-        `INSERT INTO images (url) VALUES ($1) RETURNING id`,
-        [image.url]
-      )
-
-      imageIds.push(imageResult.rows[0].id)
-    }
-
-    for (const imageId of imageIds) {
-      await db.query(
-        `INSERT INTO products_images (product_id, image_id) VALUES ($1, $2)`,
-        [productId, imageId]
-      )
+    if (images && images.length > 0) {
+      for (const file of images) {
+        const imageUrl = `/uploads/${file}`
+        const imageResult = await db.query(
+          `INSERT INTO images (url) VALUES ($1) RETURNING id`,
+          [imageUrl]
+        )
+        await db.query(
+          `INSERT INTO products_images (product_id, image_id) VALUES ($1, $2)`,
+          [productId, imageResult.rows[0].id]
+        )
+      }
     }
 
     return response({
       res,
       code: 201,
-      message: 'product created successfully',
-      data: rows[0],
+      message: 'Product created successfully',
+      data: { ...rows[0] },
     })
   } catch (err) {
+    console.error('Error:', err)
     return response({
       res,
       code: 500,
-      message: 'error trying to create product',
+      message: 'Error trying to create product',
       data: null,
     })
   }
 }
-
 export const getProducts = async (req: Request, res: Response) => {
   try {
     const { rows } = await db.query(`
-      SELECT p.*, i.url AS image_url
+      SELECT 
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.state,
+        p.category_id,
+        p.created_at,
+        COALESCE(
+          JSON_AGG(
+            CASE WHEN i.id IS NOT NULL THEN json_build_object('id', i.id, 'url', i.url) END
+          ) FILTER (WHERE i.id IS NOT NULL), 
+          '[]'
+        ) AS images
       FROM products p
       LEFT JOIN products_images pi ON p.id = pi.product_id
       LEFT JOIN images i ON pi.image_id = i.id
+      GROUP BY p.id
     `)
-
-    if (!rows.length) {
-      return response({
-        res,
-        code: 404,
-        message: 'no products found',
-        data: null,
-      })
-    }
 
     return response({
       res,
@@ -97,6 +105,7 @@ export const getProducts = async (req: Request, res: Response) => {
       data: rows,
     })
   } catch (err) {
+    console.error(err)
     return response({
       res,
       code: 500,
@@ -112,11 +121,25 @@ export const getProductById = async (req: Request, res: Response) => {
 
     const { rows } = await db.query(
       `
-      SELECT p.*, i.url AS image_url
+      SELECT 
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.state,
+        p.category_id,
+        p.created_at,
+        COALESCE(
+          JSON_AGG(
+            CASE WHEN i.id IS NOT NULL THEN json_build_object('id', i.id, 'url', i.url) END
+          ) FILTER (WHERE i.id IS NOT NULL), 
+          '[]'
+        ) AS images
       FROM products p
       LEFT JOIN products_images pi ON p.id = pi.product_id
       LEFT JOIN images i ON pi.image_id = i.id
       WHERE p.id = $1
+      GROUP BY p.id
     `,
       [id]
     )
@@ -137,6 +160,7 @@ export const getProductById = async (req: Request, res: Response) => {
       data: rows[0],
     })
   } catch (err) {
+    console.error('Error fetching product by ID:', err)
     return response({
       res,
       code: 500,
@@ -152,11 +176,25 @@ export const getProductByCategory = async (req: Request, res: Response) => {
 
     const { rows } = await db.query(
       `
-      SELECT p.*, i.url AS image_url
+      SELECT 
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.state,
+        p.category_id,
+        p.created_at,
+        COALESCE(
+          JSON_AGG(
+            CASE WHEN i.id IS NOT NULL THEN json_build_object('id', i.id, 'url', i.url) END
+          ) FILTER (WHERE i.id IS NOT NULL), 
+          '[]'
+        ) AS images
       FROM products p
       LEFT JOIN products_images pi ON p.id = pi.product_id
       LEFT JOIN images i ON pi.image_id = i.id
       WHERE p.category_id = $1
+      GROUP BY p.id
     `,
       [id_category]
     )
@@ -165,7 +203,7 @@ export const getProductByCategory = async (req: Request, res: Response) => {
       return response({
         res,
         code: 404,
-        message: 'product not found',
+        message: 'no products found for this category',
         data: null,
       })
     }
@@ -173,14 +211,15 @@ export const getProductByCategory = async (req: Request, res: Response) => {
     return response({
       res,
       code: 200,
-      message: 'product retrieved successfully',
-      data: rows[0],
+      message: 'products retrieved successfully',
+      data: rows,
     })
   } catch (err) {
+    console.error('Error fetching products by category:', err)
     return response({
       res,
       code: 500,
-      message: 'error trying to retrieve product',
+      message: 'error trying to retrieve products',
       data: null,
     })
   }
@@ -225,56 +264,78 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params
-    const { name, description, price, state, category_id, imagesToDelete } =
-      req.body
+    const body = {
+      ...req.body,
+      price: req.body.price ? Number(req.body.price) : undefined,
+      imagesToDelete: req.body.imagesToDelete
+        ? Array.isArray(req.body.imagesToDelete)
+          ? req.body.imagesToDelete.map(Number)
+          : [Number(req.body.imagesToDelete)]
+        : [],
+    }
 
-    const queryValues = [id]
+    const parsedBody = updateProductoSchema.safeParse(body)
+    if (!parsedBody.success) {
+      return response({
+        res,
+        code: 400,
+        message: 'Datos inválidos',
+        data: null,
+      })
+    }
+
+    const { id } = req.params
+    const {
+      name,
+      description,
+      price,
+      state,
+      category_id,
+      imagesToDelete,
+      images,
+    } = parsedBody.data
+
+    const queryValues: (string | number)[] = [id]
     let paramIndex = 2
     const queryParts = []
 
-    if (name) {
+    if (name !== undefined) {
       queryParts.push(`name = $${paramIndex}`)
       queryValues.push(name)
       paramIndex++
     }
-
-    if (description) {
+    if (description !== undefined) {
       queryParts.push(`description = $${paramIndex}`)
       queryValues.push(description)
       paramIndex++
     }
-
-    if (price) {
+    if (price !== undefined) {
       queryParts.push(`price = $${paramIndex}`)
       queryValues.push(price)
       paramIndex++
     }
-
-    if (state) {
+    if (state !== undefined) {
       queryParts.push(`state = $${paramIndex}`)
       queryValues.push(state)
       paramIndex++
     }
-
-    if (category_id) {
+    if (category_id !== undefined) {
       queryParts.push(`category_id = $${paramIndex}`)
       queryValues.push(category_id)
       paramIndex++
     }
 
+    let updatedProduct = null
     if (queryParts.length > 0) {
       queryParts.push(`updated_at = CURRENT_TIMESTAMP`)
-
       const query = `
         UPDATE products
         SET ${queryParts.join(', ')}
         WHERE id = $1
+        RETURNING *
       `
-
       const { rows } = await db.query(query, queryValues)
-
-      if (!rows?.length) {
+      if (!rows.length) {
         return response({
           res,
           code: 404,
@@ -282,66 +343,81 @@ export const updateProduct = async (req: Request, res: Response) => {
           data: null,
         })
       }
+      updatedProduct = rows[0]
     }
 
-    if (imagesToDelete?.length > 0) {
-      const deleteRelationsResult = await db.query(
+    // 2. Eliminar imágenes si corresponde
+    if (
+      imagesToDelete &&
+      Array.isArray(imagesToDelete) &&
+      imagesToDelete.length > 0
+    ) {
+      await db.query(
         `DELETE FROM products_images 
          WHERE product_id = $1 AND image_id = ANY($2::int[])`,
         [id, imagesToDelete]
       )
 
-      if (deleteRelationsResult.rowCount === 0) {
-        return response({
-          res,
-          code: 404,
-          message: 'Imagen no encontrada o no eliminada',
-          data: null,
-        })
-      }
-
-      const deleteImagesResult = await db.query(
-        `DELETE FROM images WHERE id = ANY($1::int[])`,
-        [imagesToDelete]
-      )
-
-      if (deleteImagesResult.rowCount === 0) {
-        return response({
-          res,
-          code: 404,
-          message: 'Imagen no encontrada o no eliminada',
-          data: null,
-        })
-      }
+      await db.query(`DELETE FROM images WHERE id = ANY($1::int[])`, [
+        imagesToDelete,
+      ])
     }
 
-    if (req.body.images?.length > 0) {
-      const imageIds = []
+    // 3. Agregar nuevas imágenes sin repetir
+    if (images && images.length > 0) {
+      for (const file of images) {
+        const imageUrl = `/uploads/${file}`
 
-      for (const image of req.body.images) {
-        const imageUrl = `/uploads/${image.filename}`
-        const imageResult = await db.query(
-          `INSERT INTO images (url) VALUES ($1) RETURNING id`,
+        // Verificar si la imagen ya existe
+        const imageExistsResult = await db.query(
+          `SELECT id FROM images WHERE url = $1`,
           [imageUrl]
         )
-        imageIds.push(imageResult.rows[0].id)
-      }
 
-      for (const imageId of imageIds) {
-        await db.query(
-          `INSERT INTO products_images (product_id, image_id) VALUES ($1, $2)`,
+        let imageId: number
+
+        if (imageExistsResult.rows.length > 0) {
+          // Ya existe la imagen, usar ese id
+          imageId = imageExistsResult.rows[0].id
+        } else {
+          // No existe, insertarla y obtener el id
+          const imageResult = await db.query(
+            `INSERT INTO images (url) VALUES ($1) RETURNING id`,
+            [imageUrl]
+          )
+          imageId = imageResult.rows[0].id
+        }
+
+        // Verificar si ya existe la relación producto-imagen
+        const relationExists = await db.query(
+          `SELECT 1 FROM products_images WHERE product_id = $1 AND image_id = $2`,
           [id, imageId]
         )
+        if (relationExists.rows.length === 0) {
+          // Si no existe, crear la relación
+          await db.query(
+            `INSERT INTO products_images (product_id, image_id) VALUES ($1, $2)`,
+            [id, imageId]
+          )
+        }
       }
+      return response({
+        res,
+        code: 200,
+        message:
+          'Producto actualizado exitosamente y nuevas imágenes agregadas (sin duplicados)',
+        data: updatedProduct,
+      })
+    } else {
+      return response({
+        res,
+        code: 200,
+        message: 'Producto actualizado exitosamente',
+        data: updatedProduct,
+      })
     }
-
-    return response({
-      res,
-      code: 200,
-      message: 'Producto actualizado exitosamente',
-      data: null,
-    })
   } catch (err) {
+    console.error(err)
     return response({
       res,
       code: 500,

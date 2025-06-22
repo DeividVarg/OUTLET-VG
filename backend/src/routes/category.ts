@@ -1,4 +1,3 @@
-import { category } from './../../types/models'
 import { Router } from 'express'
 import {
   GetCategories,

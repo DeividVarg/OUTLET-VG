@@ -9,6 +9,7 @@ export const categoryModel = async () => {
     CREATE TABLE IF NOT EXISTS categories(
     id uuid default uuid_generate_v4() primary key,
     name varchar(50) not null,
+    description text not null,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )
