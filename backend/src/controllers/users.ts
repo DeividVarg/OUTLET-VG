@@ -3,11 +3,7 @@ import { response } from '../utils/response'
 import { Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import {
-  RegisterSchema,
-  LoginSchema,
-  UpdateUserSchema,
-} from '../schemas/users'
+import { RegisterSchema, LoginSchema, UpdateUserSchema } from '../schemas/users'
 
 const JwtSecretUser = process.env.JWT_SECRET_USER || 'defaultTokenSecret'
 const JwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h'

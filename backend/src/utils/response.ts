@@ -1,4 +1,4 @@
-import { responseType } from '../../types/types'
+import { responseType } from '../types/types'
 
 export const response = ({ res, code, message, data = null }: responseType) => {
   res.status(code).json({

@@ -1,9 +1,7 @@
 import { db } from '../config/db'
 import { response } from '../utils/response'
 import { Request, Response } from 'express'
-import { upload, convertToWebP } from '../config/multer'
 import { productoSchema, updateProductoSchema } from '../schemas/products'
-import { z } from 'zod'
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
