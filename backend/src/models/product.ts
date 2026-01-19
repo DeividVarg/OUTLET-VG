@@ -1,14 +1,14 @@
 import { db } from '../config/db'
 
 export const productModel = async () => {
-  try {
-    await db.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
+  await db.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 
-    await db.query(`
+  await db.query(`
       CREATE TABLE IF NOT EXISTS products(
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
         description TEXT NOT NULL,
+        urls TEXT[],
         price NUMERIC(10, 2) NOT NULL,
         state VARCHAR(20) NOT NULL DEFAULT 'not available',
         category_id UUID,
@@ -18,7 +18,7 @@ export const productModel = async () => {
       );
     `)
 
-    await db.query(`
+  await db.query(`
       CREATE TABLE IF NOT EXISTS images (
         id SERIAL PRIMARY KEY,
         url TEXT NOT NULL,
@@ -26,7 +26,7 @@ export const productModel = async () => {
       );
     `)
 
-    await db.query(`
+  await db.query(`
       CREATE TABLE IF NOT EXISTS products_images (
         product_id UUID NOT NULL,
         image_id INTEGER NOT NULL,
@@ -35,10 +35,4 @@ export const productModel = async () => {
         FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE
       );
     `)
-
-    console.log('Product tables created successfully')
-  } catch (error) {
-    console.error('Error creating product tables:', error)
-    throw error
-  }
 }

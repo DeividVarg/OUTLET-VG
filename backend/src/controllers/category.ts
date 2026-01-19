@@ -65,6 +65,7 @@ export const createCategory = async (req: Request, res: Response) => {
     const result = CreateCategorySchema.safeParse(req.body)
 
     if (!result.success) {
+      console.log(result.error)
       return response({
         res,
         code: 400,
@@ -76,7 +77,7 @@ export const createCategory = async (req: Request, res: Response) => {
     const { name, description } = result.data
 
     const { rows } = await db.query(
-      'INSERT INTO categories (name, description) VALUES ($1, $2)',
+      'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING *',
       [name, description]
     )
 
@@ -84,7 +85,7 @@ export const createCategory = async (req: Request, res: Response) => {
       res,
       code: 200,
       message: 'category created succesfully',
-      data: rows,
+      data: rows[0],
     })
   } catch (err) {
     return response({

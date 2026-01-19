@@ -1,28 +1,57 @@
 import { CardProducts } from '../products/cardProducts'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ModalProductsAdmin } from './modalProducts'
-import Productos from '~/routes/products'
+import { fetchProducts } from '~/api/poducts'
 
 export const AdminProducts = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [products, setProducts] = useState([])
+  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+
+  const loadProducts = async () => {
+    const data = await fetchProducts()
+    setProducts(data)
+  }
+
+  const handleEdit = (product: any) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }
+
+  const handleCreate = () => {
+    setSelectedProduct(null)
+    setIsModalOpen(true)
+  }
+
+  useEffect(() => {
+    loadProducts()
+  }, [])
 
   return (
-    <div className='h-screen flex flex-col items-center pt-20'>
-      {/* Botón para añadir */}
+    <div className="h-screen flex flex-col items-center pt-20">
       <button
-        onClick={() => setIsModalOpen(true)}
-        className="mb-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
+        onMouseDown={handleCreate}
+        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-5"
       >
-        Añadir producto
+        + Añadir Producto
       </button>
 
-      {/* Modal */}
-      <ModalProductsAdmin isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <ModalProductsAdmin
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={selectedProduct}
+        loadProducts={loadProducts}
+      />
 
-      {/* Grid de productos */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full'>
-        {Array.from({ length: 10 }, (_, index) => (
-          <CardProducts productId={'' } />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full px-4">
+        {products.map((product: any) => (
+          <div
+            key={product.id}
+            onMouseDown={() => handleEdit(product)}
+            className="cursor-pointer"
+          >
+            <CardProducts product={product} />
+          </div>
         ))}
       </div>
     </div>

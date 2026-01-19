@@ -2,6 +2,7 @@ import { db } from '../config/db'
 import { response } from '../utils/response'
 import { Request, Response } from 'express'
 import { productoSchema, updateProductoSchema } from '../schemas/products'
+import { error } from 'console'
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
@@ -14,6 +15,8 @@ export const createProduct = async (req: Request, res: Response) => {
     }
     const result = productoSchema.safeParse(preprocessedData)
 
+    console.log('Validation Result:', result.error)
+
     if (!result.success) {
       return response({
         res,
@@ -23,16 +26,18 @@ export const createProduct = async (req: Request, res: Response) => {
       })
     }
 
-    const { name, description, price, state, category_id, images } = result.data
+    const { name, description, price, urls, state, category_id, images } =
+      result.data
 
     const { rows } = await db.query(
-      `INSERT INTO products (name, description, price, state, category_id, created_at)
-       VALUES ($1, $2, $3, $4, $5, now())
+      `INSERT INTO products (name, description, urls , price, state, category_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, now())
        RETURNING id`,
-      [name, description, price, state, category_id]
+      [name, description, urls, price, state, category_id]
     )
 
     if (!rows || !rows[0]) {
+      console.log(rows)
       return response({
         res,
         code: 400,
@@ -73,16 +78,21 @@ export const createProduct = async (req: Request, res: Response) => {
     })
   }
 }
+
 export const getProducts = async (req: Request, res: Response) => {
   try {
+    console.log('Fetching all products')
     const { rows } = await db.query(`
       SELECT 
         p.id,
         p.name,
         p.description,
+        p.urls,
         p.price,
         p.state,
+        -- 1. 💡 Cambio: Incluimos el ID de la categoría
         p.category_id,
+        c.name AS category_name,
         p.created_at,
         COALESCE(
           JSON_AGG(
@@ -91,9 +101,14 @@ export const getProducts = async (req: Request, res: Response) => {
           '[]'
         ) AS images
       FROM products p
+      
+      LEFT JOIN categories c ON p.category_id = c.id
+      
       LEFT JOIN products_images pi ON p.id = pi.product_id
       LEFT JOIN images i ON pi.image_id = i.id
-      GROUP BY p.id
+      
+      -- 2. 💡 Cambio: Agregamos el ID de la categoría al GROUP BY
+      GROUP BY p.id, c.name, p.category_id
     `)
 
     return response({
@@ -115,6 +130,8 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
+    console.log('Route hit')
+
     const { id } = req.params
 
     const { rows } = await db.query(
@@ -123,6 +140,7 @@ export const getProductById = async (req: Request, res: Response) => {
         p.id,
         p.name,
         p.description,
+        p.urls,
         p.price,
         p.state,
         p.category_id,
@@ -178,6 +196,7 @@ export const getProductByCategory = async (req: Request, res: Response) => {
         p.id,
         p.name,
         p.description,
+        p.urls,
         p.price,
         p.state,
         p.category_id,
@@ -274,11 +293,12 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     const parsedBody = updateProductoSchema.safeParse(body)
     if (!parsedBody.success) {
+      console.log('Error de Validación Completo:', parsedBody.error)
       return response({
         res,
         code: 400,
         message: 'Datos inválidos',
-        data: null,
+        data: { errors: parsedBody.error.errors },
       })
     }
 
@@ -286,6 +306,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     const {
       name,
       description,
+      urls,
       price,
       state,
       category_id,
@@ -293,7 +314,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       images,
     } = parsedBody.data
 
-    const queryValues: (string | number)[] = [id]
+    const queryValues: (string | number | string[])[] = [id]
     let paramIndex = 2
     const queryParts = []
 
@@ -320,6 +341,11 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (category_id !== undefined) {
       queryParts.push(`category_id = $${paramIndex}`)
       queryValues.push(category_id)
+      paramIndex++
+    }
+    if (urls !== undefined) {
+      queryParts.push(`urls = $${paramIndex}`)
+      queryValues.push(urls)
       paramIndex++
     }
 

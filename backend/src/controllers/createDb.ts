@@ -7,8 +7,6 @@ export const createDb = async () => {
     await categoryModel()
     await productModel()
     await userModel()
-
-    console.log('Tables created successfully')
   } catch (error) {
     console.error('Error creating tables:', error)
   }

@@ -21,7 +21,7 @@ export const RegisterSchema = z.object({
       password2: z
         .string()
         .min(4, 'la contraseña debe tener minimo 8 caracteres'),
-      role: z.enum(['admin', 'employee', 'customer']).default('employee'),
+      role: z.enum(['admin', 'employee']).default('employee'),
     })
     .refine((data) => data.password === data.password2, {
       message: 'Las contraseñas no coinciden',

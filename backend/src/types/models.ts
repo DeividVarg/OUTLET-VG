@@ -12,6 +12,7 @@ export interface product {
   id?: string
   name: string
   description: string
+  urls: string[]
   price: number
   category: string
   stock: number

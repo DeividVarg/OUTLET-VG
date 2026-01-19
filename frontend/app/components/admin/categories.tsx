@@ -1,5 +1,13 @@
-import { useState } from "react"
-import { ModalCategoriesAdmin } from './adminCategories'
+import { useState, useEffect } from 'react'
+import { ModalCategoriesAdmin } from './modalCategories'
+import { CardCategories } from '../categories/cardCategories'
+import { fetchCategories } from '~/api/categories'
+
+type CategoryFormData = {
+  id?: string
+  name: string
+  description: string
+}
 
 type Category = {
   id: string
@@ -11,26 +19,53 @@ export const AdminCategories = () => {
   const [isOpenCategory, setIsOpenCategory] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
-  // 👇 Ejemplo de categorías estáticas (luego puedes cargarlas desde el backend/contexto)
-  const [categories, setCategories] = useState<Category[]>([
-    { id: "1", name: "Electrónica", description: "Celulares, laptops, tablets" },
-    { id: "2", name: "Ropa", description: "Moda para todos" },
-  ])
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      const fetchedCategories = await fetchCategories()
+      setCategories(fetchedCategories)
+    }
+
+    loadCategories()
+  }, [])
 
   const handleAdd = () => {
-    setEditingCategory(null) // modo creación
+    setEditingCategory(null)
     setIsOpenCategory(true)
   }
 
   const handleEdit = (category: Category) => {
-    setEditingCategory(category) // modo edición
+    setEditingCategory(category)
     setIsOpenCategory(true)
   }
 
+  const handleCategorySave = (data: CategoryFormData) => {
+    if (!data.id) {
+      console.error('La categoría creada no tiene id')
+      return
+    }
+
+    setCategories((prev) => {
+      const exists = prev.find((cat) => cat.id === data.id)
+      if (exists) {
+        // actualizar
+        return prev.map((cat) =>
+          cat.id === data.id ? (data as Category) : cat
+        )
+      } else {
+        // crear
+        return [...prev, data as Category]
+      }
+    })
+
+    setEditingCategory(null)
+    setIsOpenCategory(false)
+  }
+
   return (
-    <div className="h-screen flex flex-col items-center pt-20 w-full">
-      {/* Botón añadir */}
-      <div className="mb-6">
+    <div className="h-screen flex flex-col items-center pt-20 w-full p-4">
+      <div className="mb-6 w-full flex justify-center">
         <button
           onClick={handleAdd}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -39,8 +74,23 @@ export const AdminCategories = () => {
         </button>
       </div>
 
-      <div>
-        
+      <ModalCategoriesAdmin
+        isOpen={isOpenCategory}
+        onClose={() => setIsOpenCategory(false)}
+        category={editingCategory || undefined}
+        onSave={handleCategorySave}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full justify-center items-center">
+        {categories.map((cat) => (
+          <div
+            key={cat.id}
+            onClick={() => handleEdit(cat)}
+            className="cursor-pointer"
+          >
+            <CardCategories categoryId={cat.id} name={cat.name} />
+          </div>
+        ))}
       </div>
     </div>
   )

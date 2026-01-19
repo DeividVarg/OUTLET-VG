@@ -26,16 +26,26 @@ export default function adminView() {
 
 
   return (
-    <div className='h-screen flex justify-center'>
-      <div className='flex flex-col justify-center items-start gap-4 absolute left-8 top-1/3'>
-        <button className='text-xl' onClick={() => handleViewChange('products')}>products</button>
-        <button className='text-xl' onClick={() => handleViewChange('users')}>users</button>
-        <button className='text-xl' onClick={() => handleViewChange('categories')}>categories</button>
+    <div className="h-screen flex justify-center">
+      <div className="flex flex-col justify-center items-start gap-4 absolute left-8 top-1/3">
+        <button
+          className="text-xl"
+          onClick={() => handleViewChange('products')}
+        >
+          products
+        </button>
+        <button className="text-xl" onClick={() => handleViewChange('users')}>
+          users
+        </button>
+        <button
+          className="text-xl"
+          onClick={() => handleViewChange('categories')}
+        >
+          categories
+        </button>
       </div>
 
-      <div>
-        {renderActiveView()}
-      </div>
+      <div className="ml-20">{renderActiveView()}</div>
     </div>
   )
 }

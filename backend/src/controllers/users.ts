@@ -10,7 +10,6 @@ const JwtExpiresIn = process.env.JWT_EXPIRES_IN || '1h'
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    console.log('getUsers called')
     const { rows } = await db.query('SELECT * FROM users')
 
     if (!rows) {
@@ -115,7 +114,10 @@ export const Register = async (req: Request, res: Response) => {
   try {
     const result = RegisterSchema.shape.body.safeParse(req.body)
 
+    console.log(req.body)
+
     if (!result.success) {
+      console.log('Register data:', result.error)
       const errors = result.error.flatten().fieldErrors
       return response({
         res,
@@ -125,16 +127,8 @@ export const Register = async (req: Request, res: Response) => {
       })
     }
 
-    const { name, last_name, email, password, password2, role } = result.data
-
-    if (password !== password2) {
-      return response({
-        res,
-        code: 400,
-        message: 'Las contraseñas no coinciden',
-        data: null,
-      })
-    }
+    const { name, last_name, email, password, role } = result.data
+    console.log('Missing fields:', result.data)
 
     if (!name || !email || !password || !last_name || !role) {
       return response({
@@ -151,21 +145,6 @@ export const Register = async (req: Request, res: Response) => {
       'INSERT INTO users (name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [name, last_name, email, hashedPassword, role]
     )
-
-    const newUserToken = jwt.sign(
-      { id: rows[0].id, email: rows[0].email, role: rows[0].role },
-      JwtSecretUser,
-      { expiresIn: '1h' }
-    )
-
-    res.cookie('User', newUserToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 1000,
-      domain: process.env.COOKIE_DOMAIN || 'localhost',
-      path: '/',
-    })
 
     return response({
       res,
@@ -252,27 +231,26 @@ export const login = async (req: Request, res: Response) => {
       })
     }
 
-    const userToken = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      JwtSecretUser,
-      { expiresIn: '1h' }
-    )
+    // const userToken = jwt.sign(
+    //   { id: user.id, email: user.email, role: user.role },
+    //   JwtSecretUser,
+    //   { expiresIn: '1h' }
+    // )
 
-    res.cookie('User', userToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 1000,
-      domain: process.env.COOKIE_DOMAIN || 'localhost',
-      path: '/',
-    })
+    // res.cookie('User', userToken, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'strict',
+    //   maxAge: 60 * 60 * 1000,
+    //   domain: process.env.COOKIE_DOMAIN || 'localhost',
+    //   path: '/',
+    // })
 
     return response({
       res,
       code: 200,
       message: 'user logged in successfully',
       data: {
-        email: user.email,
         name: user.name,
         role: user.role,
       },

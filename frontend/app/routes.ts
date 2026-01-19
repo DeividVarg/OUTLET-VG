@@ -5,5 +5,6 @@ export default [
   route('login', 'routes/login.tsx'),
   route('products', 'routes/products.tsx'),
   route('categories', 'routes/categories.tsx'),
-  route('admin', 'routes/admin.tsx')
+  route('admin', 'routes/admin.tsx'),
+  route('*', 'routes/404.tsx'),
 ] satisfies RouteConfig
