@@ -54,3 +54,7 @@ export const updateProductoSchema = z.object({
     .max(5, 'No puede haber más de 5 imágenes')
     .optional(),
 })
+
+export const productByCategorySchema = z.object({
+  id_category: z.string().uuid('El ID de la categoría debe ser un UUID'),
+})

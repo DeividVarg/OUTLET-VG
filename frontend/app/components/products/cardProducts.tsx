@@ -1,51 +1,41 @@
-import { useState } from 'react'
-import { ModalProducts } from './modalProducts'
-import { useLocation } from 'react-router'
-import { ModalProductsAdmin } from '../admin/modalProducts'
-
 const API_URL = import.meta.env.VITE_API_URL
 
-export const CardProducts = ({ product }: { product: any }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const location = useLocation()
-
+export const CardProducts = ({
+  product,
+  onOpen,
+}: {
+  product: any
+  onOpen: (product: any) => void
+}) => {
   return (
-    <div className="relative group w-60" id={product.id}>
+    <div className="relative w-60 animate-blink" id={product.id}>
       <div
-        className="group-hover:scale-105 transition-transform duration-300 cursor-pointer flex flex-col"
-        onClick={() => setIsOpen(true)}
+        className="
+          hover:ring hover:ring-amber-50 
+          hover:scale-105 
+          transition-all duration-500 
+          cursor-pointer flex flex-col 
+          p-2 rounded-4xl
+          shadow-sm shadow-indigo-500/30"
+        onClick={() => onOpen(product)}
       >
-        <header>
-          <h2 className="text-2xl font-bold">{product.name}</h2>
-        </header>
-        <main className="my-1">
-          <p className="text-2xl text-gray-700 text-center font-semibold">
-            ${product.price}
-          </p>
-        </main>
-        <footer className="h-48 w-full mt-2">
+        <header className="h-48">
           <img
             className="w-full h-full object-fill rounded-2xl"
             src={`${API_URL}${product.images[0]?.url}`}
             alt="product"
           />
-        </footer>
-      </div>
+        </header>
 
-      {/* Modal */}
-      {location.pathname === '/admin' ? (
-        <ModalProductsAdmin
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          product={product}
-        />
-      ) : (
-        <ModalProducts
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          product={product}
-        />
-      )}
+        <main className="my-1 flex flex-col justify-center items-center">
+          <h2 className="text-2xl font-bold">{product.name}</h2>
+          <div className="border-b-2 border-gray-500 w-11/12 my-1" />
+          <p className="text-2xl text-white text-center font-semibold">
+            <span className="text-lg">$</span>
+            {product.price}
+          </p>
+        </main>
+      </div>
     </div>
   )
 }

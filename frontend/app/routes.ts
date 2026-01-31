@@ -7,4 +7,6 @@ export default [
   route('categories', 'routes/categories.tsx'),
   route('admin', 'routes/admin.tsx'),
   route('*', 'routes/404.tsx'),
+  route('product/:id', 'routes/productsByCategory.tsx'),
+  route('product/productDetail/:id', 'routes/productsById.tsx'),
 ] satisfies RouteConfig

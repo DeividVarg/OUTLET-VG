@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ModalUsersAdmin } from './userModal'
 import { fetchUsers, deleteUser } from '~/api/users'
+import { jwtDecode } from 'jwt-decode'
 
 type UserFormData = {
   id?: string
@@ -26,28 +27,47 @@ interface UserRowProps {
   onDelete: (id: string) => void
 }
 
-const UserRow = ({ user, onEdit, onDelete }: UserRowProps) => (
-  <div className="grid grid-flow-col-dense items-center p-3 border-b gap-3">
-    <div className="w-full">{user.name}</div>
-    <div className="w-full">{user.last_name}</div>
-    <div className="w-full mr-16">{user.email}</div>
-    <div className="w-full">{user.role}</div>
-    <div className="w-full flex justify-end space-x-2">
-      <button
-        onClick={() => onEdit(user)}
-        className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-      >
-        Editar
-      </button>
-      <button
-        onClick={() => onDelete(user.id)}
-        className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-      >
-        Eliminar
-      </button>
-    </div>
-  </div>
-)
+const UserRow = ({ user, onEdit, onDelete }: UserRowProps) => {
+  const tokenData = () => {
+    const token = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('User='))
+      ?.split('=')[1]
+
+    if (!token) return null
+
+    return jwtDecode<{ role: string }>(token)
+  }
+
+  return (
+    <tr className="border-b text-center">
+      <td className="py-3">{user.name}</td>
+      <td className="py-3">{user.last_name}</td>
+      <td className="py-3">{user.email}</td>
+      <td className="py-3">{user.role}</td>
+
+      <td className="py-3">
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => onEdit(user)}
+            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+          >
+            Editar
+          </button>
+
+          {tokenData()?.role === 'admin' && (
+            <button
+              onClick={() => onDelete(user.id)}
+              className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+            >
+              Eliminar
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+}
 
 export const AdminUsers = () => {
   const [isOpenUserModal, setIsOpenUserModal] = useState(false)
@@ -104,24 +124,28 @@ export const AdminUsers = () => {
         load={loadUsers}
       />
 
-      <div className="w-full max-w-4xl border rounded-lg shadow-md overflow-hidden ">
-        <div className="flex justify-between items-center p-3 border-b font-semibold">
-          <div className="w-1/5">Nombre</div>
-          <div className="w-1/5">Apellido</div>
-          <div className="w-1/5">Email</div>
-          <div className="w-1/5">Rol</div>
-          <div className="w-1/5">Acciones</div>
-        </div>
+      <table className="w-full max-w-4xl mx-auto border rounded-lg shadow-md overflow-hidden table-fixed">
+        <thead className="">
+          <tr className="text-center">
+            <th className="mr-3">Nombre</th>
+            <th className="py-3">Apellido</th>
+            <th className="py-3">Email</th>
+            <th className="py-3">Rol</th>
+            <th className="py-3">Acciones</th>
+          </tr>
+        </thead>
 
-        {users.map((user) => (
-          <UserRow
-            key={user.id}
-            user={user}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
+        <tbody>
+          {users.map((user) => (
+            <UserRow
+              key={user.id}
+              user={user}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

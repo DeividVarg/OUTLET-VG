@@ -231,20 +231,17 @@ export const login = async (req: Request, res: Response) => {
       })
     }
 
-    // const userToken = jwt.sign(
-    //   { id: user.id, email: user.email, role: user.role },
-    //   JwtSecretUser,
-    //   { expiresIn: '1h' }
-    // )
+    const userToken = jwt.sign({ role: user.role }, JwtSecretUser, {
+      expiresIn: '1h',
+    })
 
-    // res.cookie('User', userToken, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict',
-    //   maxAge: 60 * 60 * 1000,
-    //   domain: process.env.COOKIE_DOMAIN || 'localhost',
-    //   path: '/',
-    // })
+    res.cookie('User', userToken, {
+      httpOnly: false, // puedes leer desde JS
+      secure: false, // localhost no usa HTTPS
+      sameSite: 'lax', // permite enviar la cookie entre puertos distintos
+      maxAge: 60 * 60 * 1000, // 1 hora
+      path: '/',
+    })
 
     return response({
       res,
@@ -255,6 +252,7 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
       },
     })
+
   } catch (err) {
     return response({
       res,

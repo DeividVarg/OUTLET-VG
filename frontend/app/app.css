@@ -1,8 +1,13 @@
 @import 'tailwindcss';
+@import 'tailwind-animations';
 
 html,
 body {
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
+}
+
+@theme {
+ --color-primary: #1e40af;
 }

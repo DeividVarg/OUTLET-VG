@@ -23,3 +23,4 @@ export const deleteCategory = async (id: string) => {
   const response = await axios.delete(`${API_URL}/${id}`)
   return response.data
 }
+

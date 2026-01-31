@@ -1,4 +1,4 @@
-import {AdminCategories} from '~/components/admin/categories'
+import { AdminCategories } from '~/components/admin/categories'
 import { AdminProducts } from '~/components/admin/products'
 import { AdminUsers } from '~/components/admin/users'
 import { useState } from 'react'
@@ -22,8 +22,6 @@ export default function adminView() {
   const handleViewChange = (view: string) => {
     setActiveView(view)
   }
-
-
 
   return (
     <div className="h-screen flex justify-center">

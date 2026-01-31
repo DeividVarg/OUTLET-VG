@@ -1,5 +1,7 @@
 import { useLocation } from 'react-router'
 import { deleteCategory } from '~/api/categories'
+import { useNavigate } from 'react-router'
+
 export const CardCategories = ({
   categoryId,
   name,
@@ -8,6 +10,7 @@ export const CardCategories = ({
   name: string
 }) => {
   const location = useLocation()
+  const navigate = useNavigate()
 
   const handleDelete = () => {
     const confirmed = window.confirm('¿Desea eliminar la categoría?')
@@ -20,10 +23,18 @@ export const CardCategories = ({
       console.error('Error al eliminar la categoría:', error)
     }
   }
+
+  const handleSubmit = () => {
+    if (location.pathname !== '/admin') {
+      navigate(`/product/${categoryId}`)
+    }
+  }
+
   return (
     <div
-      className="relative flex justify-center items-center group hover:scale-105 transition-all duration-300 h-60 w-72 bg-red-950/60 rounded-2xl"
+      className="relative flex justify-center items-center group hover:scale-105 transition-all duration-300 h-60 w-72 bg-red-950/60 rounded-2xl animate-blink"
       id={categoryId}
+      onClick={handleSubmit}
     >
       <div>
         {location.pathname === '/admin' ? (

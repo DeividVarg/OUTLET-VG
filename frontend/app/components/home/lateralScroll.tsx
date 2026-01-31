@@ -1,67 +1,98 @@
 import { CardProduct } from "~/components/home/cartProductCarrousel"
-
+import { fetchProducts } from '~/api/poducts'
+import { fetchCategories } from '~/api/categories'
 import { useEffect, useRef, useState } from 'react'
+import { CardCategories } from '../categories/cardCategories'
 
-const productos = [
-  'Producto 1',
-  'Producto 2',
-  'Producto 3',
-  'Producto 4',
-  'Producto 5',
-  'Producto 6',
-  'Producto 7',
-  'Producto 8',
-  'Producto 9',
-  'Producto 10',
-]
+type RenderType = 'products' | 'categories'
 
 function useVisibleCards() {
   const getCards = () => {
     if (typeof window !== 'undefined') {
-      if (window.innerWidth < 768) return 1 // sm: 1 tarjeta
-      if (window.innerWidth < 1024) return 2 // md: 2 tarjetas
-      return 4 // lg+: 4 tarjetas
+      if (window.innerWidth < 768) return 1
+      if (window.innerWidth < 1024) return 2
+      return 4
     }
     return 4
   }
+
   const [visible, setVisible] = useState(getCards())
+
   useEffect(() => {
-    function handleResize() {
+    const handleResize = () => {
       setVisible(getCards())
     }
+
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
   return visible
 }
 
 const AUTOCHANGE_INTERVAL = 3500
 
-export function Carousel() {
+const fetchApi = async (render: RenderType): Promise<any[]> => {
+  try {
+    if (render === 'products') {
+      return await fetchProducts()
+    }
+
+    if (render === 'categories') {
+      return await fetchCategories()
+    }
+
+    return []
+  } catch (error) {
+    console.error('Carousel fetch error:', error)
+    return []
+  }
+}
+
+export function Carousel({ render }: { render: RenderType }) {
+  const [data, setData] = useState<any[]>([])
   const VISIBLES = useVisibleCards()
   const [pagina, setPagina] = useState(0)
-  const numPaginas = Math.ceil(productos.length / VISIBLES)
-  const timeoutRef = useRef<any>()
+  const timeoutRef = useRef<number | null>(null)
 
+  const numPaginas = Math.max(1, Math.ceil(data.length / VISIBLES))
+
+  // ✅ SOLO UN FETCH
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetchApi(render)
+      setData(res)
+    }
+
+    load()
+  }, [render])
+
+  // reset page when responsive changes
   useEffect(() => {
     setPagina(0)
   }, [VISIBLES])
 
+  // autoplay
   useEffect(() => {
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setPagina((prev) => (prev + 1) % numPaginas)
     }, AUTOCHANGE_INTERVAL)
-    return () => clearTimeout(timeoutRef.current)
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
   }, [pagina, numPaginas])
 
   const tarjetasParaRenderizar = [
-    ...productos,
-    ...Array(numPaginas * VISIBLES - productos.length).fill(null),
+    ...data,
+    ...Array(numPaginas * VISIBLES - data.length).fill(null),
   ]
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 select-none">
-      <div className="overflow-hidden w-full">
+    <div className="w-full h-full">
+      <div className="overflow-x-hidden relative py-4">
         <div
           className="flex transition-transform duration-700 ease-in-out"
           style={{
@@ -79,9 +110,14 @@ export function Carousel() {
             >
               {tarjetasParaRenderizar
                 .slice(pageIdx * VISIBLES, pageIdx * VISIBLES + VISIBLES)
-                .map((producto, idx) => (
-                  <div key={idx} className="px-2 flex justify-center">
-                    {producto && <CardProduct producto={producto} />}
+                .map((item, idx) => (
+                  <div key={idx} className=" flex justify-center">
+                    {item &&
+                      (render === 'products' ? (
+                        <CardProduct producto={item} />
+                      ) : (
+                        <CardCategories categoryId={item.id} name={item.name} />
+                      ))}
                   </div>
                 ))}
             </div>

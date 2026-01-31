@@ -1,8 +1,8 @@
 
 export const AboutUs = () => {
   return (
-    <section className="flex flex-col items-center justify-center">
-      <div className="grid grid-cols-1 md:grid-cols-3  gap-4 justify-center items-center mt-20 mx-20 ">
+    <section className="flex flex-col items-center justify-center w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-center items-center  mt-10 w-full">
         <section className="flex flex-col justify-center items-center gap-y-2">
           <h2>section1</h2>
           <p className="">

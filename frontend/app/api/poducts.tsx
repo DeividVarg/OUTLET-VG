@@ -24,3 +24,13 @@ export const deleteProduct = async (id: string) => {
   const response = await axios.delete(`${API_URL}/${id}`)
   return response.data
 }
+
+export const fetchProductsByCategory = async (id: string) => {
+  const response = await axios.get(`${API_URL}/${id}`)
+  return response.data.data
+}
+
+export const fetchProductById = async (id: string) => {
+  const response = await axios.get(`${API_URL}/productDetail/${id}`)
+  return response.data.data
+}

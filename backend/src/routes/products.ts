@@ -1,3 +1,4 @@
+import { product } from './../types/models'
 import { upload, convertToWebP } from '../config/multer'
 import {
   createProduct,
@@ -12,8 +13,8 @@ import { Router } from 'express'
 export const productRouter = Router()
 
 productRouter.get('/', getProducts)
-productRouter.get('/:id', getProductById)
-productRouter.get('/category/:id_category', getProductByCategory)
+productRouter.get('/:id_category', getProductByCategory)
+productRouter.get('/productDetail/:id', getProductById)
 
 productRouter.post('/', upload.array('images', 5), convertToWebP, createProduct)
 
@@ -21,7 +22,7 @@ productRouter.patch(
   '/:id',
   upload.array('images', 5),
   convertToWebP,
-  updateProduct
+  updateProduct,
 )
 
 productRouter.delete('/:id', deleteProduct)

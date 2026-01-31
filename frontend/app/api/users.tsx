@@ -25,6 +25,8 @@ export const deleteUser = async (id: string) => {
 }
 
 export const loginUser = async (data: { email: string; password: string }) => {
-  const response = await axios.post(`${API_URL}/login`, data)
+  const response = await axios.post(`${API_URL}/login`, data, {
+    withCredentials: true,
+  })
   return response.data
 }

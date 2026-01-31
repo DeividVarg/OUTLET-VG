@@ -25,7 +25,7 @@ export default function Categories() {
         theme === 'dark' ? 'bg-black text-white ' : 'bg-white text-black '
       }
     >
-      <section className="grid lg:grid-cols-4 md:grid-cols-2 gap-4 place-items-start pt-20 pb-4 mx-auto h-screen px-4">
+      <section className="grid lg:grid-cols-4 md:grid-cols-2 gap-4 place-items-start pt-20 pb-4 mx-auto h-screen px-4  ">
         {categories.length > 0 ? (
           categories.map((category: { id: string; name: string }) => (
             <CardCategories

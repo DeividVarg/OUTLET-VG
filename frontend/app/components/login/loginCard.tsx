@@ -1,9 +1,20 @@
 import React from 'react'
 import { useNavigate } from 'react-router'
 import { loginUser } from '~/api/users'
+import { jwtDecode } from 'jwt-decode'
+
+const verifyCookie = async (navigate: any) => {
+  const cookie = await cookieStore.get('User')
+
+  if (cookie) {
+    navigate('/admin')
+  }
+}
 
 export const LoginCard = () => {
   const navigate = useNavigate()
+
+  verifyCookie(navigate)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

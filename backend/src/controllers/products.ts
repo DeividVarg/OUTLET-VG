@@ -1,7 +1,11 @@
 import { db } from '../config/db'
 import { response } from '../utils/response'
 import { Request, Response } from 'express'
-import { productoSchema, updateProductoSchema } from '../schemas/products'
+import {
+  productoSchema,
+  updateProductoSchema,
+  productByCategorySchema,
+} from '../schemas/products'
 import { error } from 'console'
 
 export const createProduct = async (req: Request, res: Response) => {
@@ -33,7 +37,7 @@ export const createProduct = async (req: Request, res: Response) => {
       `INSERT INTO products (name, description, urls , price, state, category_id, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, now())
        RETURNING id`,
-      [name, description, urls, price, state, category_id]
+      [name, description, urls, price, state, category_id],
     )
 
     if (!rows || !rows[0]) {
@@ -53,11 +57,11 @@ export const createProduct = async (req: Request, res: Response) => {
         const imageUrl = `/uploads/${file}`
         const imageResult = await db.query(
           `INSERT INTO images (url) VALUES ($1) RETURNING id`,
-          [imageUrl]
+          [imageUrl],
         )
         await db.query(
           `INSERT INTO products_images (product_id, image_id) VALUES ($1, $2)`,
-          [productId, imageResult.rows[0].id]
+          [productId, imageResult.rows[0].id],
         )
       }
     }
@@ -130,8 +134,6 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    console.log('Route hit')
-
     const { id } = req.params
 
     const { rows } = await db.query(
@@ -157,7 +159,7 @@ export const getProductById = async (req: Request, res: Response) => {
       WHERE p.id = $1
       GROUP BY p.id
     `,
-      [id]
+      [id],
     )
 
     if (!rows.length) {
@@ -190,6 +192,16 @@ export const getProductByCategory = async (req: Request, res: Response) => {
   try {
     const { id_category } = req.params
 
+    const result = productByCategorySchema.safeParse({ id_category })
+
+    if (result?.error) {
+      return response({
+        res,
+        code: 404,
+        message: 'no products found for this category',
+        data: result,
+      })
+    }
     const { rows } = await db.query(
       `
       SELECT 
@@ -213,7 +225,7 @@ export const getProductByCategory = async (req: Request, res: Response) => {
       WHERE p.category_id = $1
       GROUP BY p.id
     `,
-      [id_category]
+      [id_category],
     )
 
     if (!rows.length) {
@@ -221,7 +233,7 @@ export const getProductByCategory = async (req: Request, res: Response) => {
         res,
         code: 404,
         message: 'no products found for this category',
-        data: null,
+        data: rows,
       })
     }
 
