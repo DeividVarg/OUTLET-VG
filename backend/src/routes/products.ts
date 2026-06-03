@@ -1,5 +1,5 @@
-import { product } from './../types/models'
-import { upload, convertToWebP } from '../config/multer'
+import { product } from "./../types/models";
+import { upload, convertToWebP } from "../config/multer";
 import {
   createProduct,
   updateProduct,
@@ -7,22 +7,33 @@ import {
   getProductById,
   deleteProduct,
   getProductByCategory,
-} from '../controllers/products'
-import { Router } from 'express'
+  getProductBySubCategory,
+  getProductsAvailable,
+} from "../controllers/products";
+import { Router } from "express";
 
-export const productRouter = Router()
+export const productRouter = Router();
 
-productRouter.get('/', getProducts)
-productRouter.get('/:id_category', getProductByCategory)
-productRouter.get('/productDetail/:id', getProductById)
+productRouter.get("/", getProducts);
+productRouter.get("/available", getProductsAvailable);
+productRouter.get("/:id_category", getProductByCategory);
+productRouter.get("/productDetail/:id", getProductById);
+productRouter.get("/subcategory/:id_subcategory", getProductBySubCategory);
 
-productRouter.post('/', upload.array('images', 5), convertToWebP, createProduct)
+productRouter.post(
+  "/",
+
+  upload.array("images", 5),
+  convertToWebP,
+  createProduct,
+);
 
 productRouter.patch(
-  '/:id',
-  upload.array('images', 5),
+  "/:id",
+
+  upload.array("images", 5),
   convertToWebP,
   updateProduct,
-)
+);
 
-productRouter.delete('/:id', deleteProduct)
+productRouter.delete("/:id", deleteProduct);

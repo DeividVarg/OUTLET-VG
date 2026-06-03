@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tailwind-animations';
+@import "tailwindcss";
+@import "tailwind-animations";
 
 html,
 body {
@@ -9,5 +9,9 @@ body {
 }
 
 @theme {
- --color-primary: #1e40af;
+  --color-bgPrimary: #f1f5f9;
+  --color-bgSecondary: transparent;
+  --color-primary: #ff8c00;
+  --color-secondary: #8b0000;
+  --color-tertiary: #191970;
 }

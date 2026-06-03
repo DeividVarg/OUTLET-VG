@@ -1,74 +1,74 @@
-import { useState, useEffect } from 'react'
-import { ModalCategoriesAdmin } from './modalCategories'
-import { CardCategories } from '../categories/cardCategories'
-import { fetchCategories } from '~/api/categories'
+import { useState, useEffect } from "react";
+import { ModalCategoriesAdmin } from "./modalCategories";
+import { CardCategories } from "../categories/cardCategories";
+import { fetchCategories } from "~/api/categories";
 
 type CategoryFormData = {
-  id?: string
-  name: string
-  description: string
-}
+  id?: string;
+  name: string;
+  description: string;
+};
 
 type Category = {
-  id: string
-  name: string
-  description: string
-}
+  id: string;
+  name: string;
+  description: string;
+};
 
 export const AdminCategories = () => {
-  const [isOpenCategory, setIsOpenCategory] = useState(false)
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [isOpenCategory, setIsOpenCategory] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  const [categories, setCategories] = useState<Category[]>([])
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const loadCategories = async () => {
-      const fetchedCategories = await fetchCategories()
-      setCategories(fetchedCategories)
-    }
+      const fetchedCategories = await fetchCategories();
+      setCategories(fetchedCategories);
+    };
 
-    loadCategories()
-  }, [])
+    loadCategories();
+  }, []);
 
   const handleAdd = () => {
-    setEditingCategory(null)
-    setIsOpenCategory(true)
-  }
+    setEditingCategory(null);
+    setIsOpenCategory(true);
+  };
 
   const handleEdit = (category: Category) => {
-    setEditingCategory(category)
-    setIsOpenCategory(true)
-  }
+    setEditingCategory(category);
+    setIsOpenCategory(true);
+  };
 
   const handleCategorySave = (data: CategoryFormData) => {
     if (!data.id) {
-      console.error('La categoría creada no tiene id')
-      return
+      console.error("La categoría creada no tiene id");
+      return;
     }
 
     setCategories((prev) => {
-      const exists = prev.find((cat) => cat.id === data.id)
+      const exists = prev.find((cat) => cat.id === data.id);
       if (exists) {
         // actualizar
         return prev.map((cat) =>
-          cat.id === data.id ? (data as Category) : cat
-        )
+          cat.id === data.id ? (data as Category) : cat,
+        );
       } else {
         // crear
-        return [...prev, data as Category]
+        return [...prev, data as Category];
       }
-    })
+    });
 
-    setEditingCategory(null)
-    setIsOpenCategory(false)
-  }
+    setEditingCategory(null);
+    setIsOpenCategory(false);
+  };
 
   return (
-    <div className="h-screen flex flex-col items-center pt-20 w-full p-4">
+    <div className="flex flex-col items-center lg:mt-20 mt-40 w-full p-4 pb-10">
       <div className="mb-6 w-full flex justify-center">
         <button
           onClick={handleAdd}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-tertiary transition-colors font-semibold duration-300"
         >
           + Añadir Categoría
         </button>
@@ -81,7 +81,7 @@ export const AdminCategories = () => {
         onSave={handleCategorySave}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full justify-center items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full place-items-center">
         {categories.map((cat) => (
           <div
             key={cat.id}
@@ -93,5 +93,5 @@ export const AdminCategories = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

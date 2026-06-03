@@ -5,26 +5,27 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useLocation
-} from 'react-router'
-import { useEffect, useState } from 'react'
-import type { Route } from './+types/root'
-import './app.css'
-import { Navbar } from '~/components/navbar'
-import { ThemeProvider } from './context/themeContext'
+  useLocation,
+} from "react-router";
+import { useEffect, useState } from "react";
+import type { Route } from "./+types/root";
+import "./app.css";
+import { Navbar } from "~/components/navbar";
+import { ThemeProvider } from "./context/themeContext";
+import { AuthProvider } from "./context/authContext";
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
-]
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -41,64 +42,63 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }
 
-
 export default function App() {
-  const [showNavbar, setShowNavbar] = useState(true)
-  const location = useLocation()
-  
- useEffect(() => {
-    if (location.pathname !== '/') {
-      setShowNavbar(true)
-      return
+  const [showNavbar, setShowNavbar] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname !== "/") {
+      setShowNavbar(true);
+      return;
     } else {
-      setShowNavbar(false)
+      setShowNavbar(false);
     }
 
-   const handleScroll = () => {
-     setShowNavbar(window.scrollY > 200)
-   }
+    const handleScroll = () => {
+      setShowNavbar(window.scrollY > 200);
+    };
 
-   window.addEventListener('scroll', handleScroll)
-   return () => window.removeEventListener('scroll', handleScroll)
- }, [location])
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [location]);
 
   return (
     <ThemeProvider>
-      <div>
-        <div
-          className={`fixed top-0 left-0 w-full z-50 transition-transform duration-800 ${
-          showNavbar
-              ? 'translate-y-0'
-              : '-translate-y-full'
-          }`}
-        >
-          <Navbar />
+      <AuthProvider>
+        <div>
+          <div
+            className={`fixed top-0 left-0 w-full z-50 transition-transform duration-800 ${
+              showNavbar ? "translate-y-0" : "-translate-y-full"
+            }`}
+          >
+            <Navbar />
+          </div>
+          <div>
+            <Outlet />
+          </div>
         </div>
-        <div >
-          <Outlet />
-        </div>
-      </div>
+      </AuthProvider>
     </ThemeProvider>
-  )
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!'
-  let details = 'An unexpected error occurred.'
-  let stack: string | undefined
+  let message = "Oops!";
+  let details = "An unexpected error occurred.";
+  let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error'
+    message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
-        ? 'The requested page could not be found.'
-        : error.statusText || details
+        ? "The requested page could not be found."
+        : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message
-    stack = error.stack
+    details = error.message;
+    stack = error.stack;
   }
 
   return (
@@ -111,5 +111,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
     </main>
-  )
+  );
 }

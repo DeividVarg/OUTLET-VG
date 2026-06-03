@@ -1,4 +1,5 @@
-import { Router } from 'express'
+import { Router } from "express";
+
 import {
   getUsers,
   getUserById,
@@ -8,15 +9,47 @@ import {
   updateUser,
   Register,
   deleteUser,
-} from '../controllers/users'
+  RegisterAuth,
+  me,
+  verifyLogin,
+  resetPassword,
+  forgotPassword,
+} from "../controllers/users";
 
-export const UserRouter = Router()
+import { authenticate } from "../middleware/Autenticate";
+import { authorizeAction } from "../middleware/checkAutoritation";
 
-UserRouter.get('/', getUsers)
-UserRouter.get('/:id', getUserById)
-UserRouter.get('/email/:email', getUserByEmail)
-UserRouter.post('/login', login)
-UserRouter.post('/logout', logout)
-UserRouter.post('/register', Register)
-UserRouter.patch('/:id', updateUser)
-UserRouter.delete('/:id', deleteUser)
+export const UserRouter = Router();
+
+UserRouter.get("/", getUsers);
+UserRouter.get("/:id", getUserById);
+UserRouter.get("/email/:email", getUserByEmail);
+
+UserRouter.get("/auth/me", me);
+
+UserRouter.post("/login", login);
+UserRouter.post("/login", login);
+UserRouter.post("/login/verify", verifyLogin);
+
+UserRouter.post("/logout", logout);
+
+UserRouter.post("/register", Register);
+
+UserRouter.post("/forgot-password", forgotPassword);
+UserRouter.post("/reset-password", resetPassword);
+
+UserRouter.post(
+  "/register/auth",
+  authenticate,
+  authorizeAction("create", "fromBody"),
+  RegisterAuth,
+);
+
+UserRouter.patch(
+  "/:id",
+  authenticate,
+  authorizeAction("update", "fromBody"),
+  updateUser,
+);
+
+UserRouter.delete("/:id", authenticate, deleteUser);

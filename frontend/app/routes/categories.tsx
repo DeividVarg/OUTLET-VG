@@ -1,31 +1,33 @@
-import { CardCategories } from '~/components/categories/cardCategories'
-import { useTheme } from '~/context/themeContext'
-import { Footer } from '~/components/home/footer'
-import { fetchCategories } from '~/api/categories'
-import { useEffect, useState } from 'react'
+import { CardCategories } from "~/components/categories/cardCategories";
+import { useTheme } from "~/context/themeContext";
+import { Footer } from "~/components/home/footer";
+import { fetchCategories } from "~/api/categories";
+import { useEffect, useState } from "react";
 
 export default function Categories() {
-  const { theme } = useTheme()
-  const [categories, setCategories] = useState([])
+  const { theme } = useTheme();
+  const [categories, setCategories] = useState([]);
 
   const loadCategories = async () => {
-    const data = await fetchCategories()
-    setCategories(data)
-  }
+    const data = await fetchCategories();
+    setCategories(data);
+  };
 
   useEffect(() => {
-    loadCategories()
-  }, [])
+    loadCategories();
+  }, []);
 
-  console.log(categories)
+  console.log(categories);
 
   return (
     <main
-      className={
-        theme === 'dark' ? 'bg-black text-white ' : 'bg-white text-black '
-      }
+      className={`flex flex-col min-h-screen ${
+        theme === "dark"
+          ? "bg-bgSecondary text-white"
+          : "bg-bgPrimary text-black"
+      }`}
     >
-      <section className="grid lg:grid-cols-4 md:grid-cols-2 gap-4 place-items-start pt-20 pb-4 mx-auto h-screen px-4  ">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 place-items-center justify-center gap-4 pt-20  px-4 max-w-7xl h-full">
         {categories.length > 0 ? (
           categories.map((category: { id: string; name: string }) => (
             <CardCategories
@@ -39,9 +41,7 @@ export default function Categories() {
         )}
       </section>
 
-      <footer className="mx-auto max-w-7xl">
-        <Footer />
-      </footer>
+      <Footer />
     </main>
-  )
+  );
 }

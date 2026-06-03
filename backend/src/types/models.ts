@@ -1,57 +1,64 @@
 export interface user {
-  id?: string
-  name: string
-  last_name: string
-  email: string
-  password: string
-  created_at?: Date
-  role?: string
+  id?: string;
+  name: string;
+  number_phone: string;
+  email: string;
+  password: string;
+  created_at?: Date;
+  role?: string;
 }
 
 export interface product {
-  id?: string
-  name: string
-  description: string
-  urls: string[]
-  price: number
-  category: string
-  stock: number
-  created_at?: Date
-  updated_at?: Date
+  id?: string;
+  name: string;
+  description: string;
+  urls: string[];
+  price: number;
+  category: string;
+  stock: number;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface category {
-  id?: string
-  name: string
-  created_at?: Date
+  id?: string;
+  name: string;
+  created_at?: Date;
 }
 
 export interface cart {
-  id?: string
-  user_id: string
-  products: []
+  id?: string;
+  user_id: string;
+  products: [];
 }
 
 export interface cart_products {
-  id?: string
-  cart_id: string
-  product_id: string
-  quantity: number
-  created_at?: Date
-  updated_at?: Date
+  id?: string;
+  cart_id: string;
+  product_id: string;
+  quantity: number;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface pucharse {
-  id?: string
-  user_id: string
-  products: []
-  total: number
-  created_at?: Date
+  id?: string;
+  user_id: string;
+  products: [];
+  total: number;
+  created_at?: Date;
 }
 
 export interface purchase_products {
-  id?: string
-  purchase_id: string
-  product_id: string
-  quantity: number
+  id?: string;
+  purchase_id: string;
+  product_id: string;
+  quantity: number;
+}
+
+export interface subCategory {
+  id?: string;
+  name: string;
+  id_category: string;
+  created_at?: Date;
 }

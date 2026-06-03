@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <main
       className={
-        theme === 'dark' ? 'bg-black text-white ' : 'bg-white text-black'
+        theme === 'dark' ? 'bg-bgSecondary text-white ' : 'bg-bgPrimary text-black'
       }
     >
       <header className="h-screen flex items-center justify-center shadow-2xl">
@@ -40,7 +40,7 @@ export default function Home() {
           </RevealOnScroll>
         </section>
 
-        <section className="flex flex-col justify-center items-center mt-32 mb-20 px-4">
+        <section className="flex flex-col justify-center items-center mt-24 px-4">
           <RevealOnScroll animation="animate-slide-up-fade animate-duration-700">
             <h1 className="text-3xl font-bold mb-8 text-center">
               Nuestras Categorías

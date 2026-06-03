@@ -1,37 +1,37 @@
-import { CardProducts } from '../products/cardProducts'
-import { useState, useEffect } from 'react'
-import { ModalProductsAdmin } from './modalProducts'
-import { fetchProducts } from '~/api/poducts'
+import { CardProducts } from "../products/cardProducts";
+import { useState, useEffect } from "react";
+import { ModalProductsAdmin } from "./modalProducts";
+import { fetchProducts } from "~/api/poducts";
 
 export const AdminProducts = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [products, setProducts] = useState([])
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const loadProducts = async () => {
-    const data = await fetchProducts()
-    setProducts(data)
-  }
+    const data = await fetchProducts();
+    setProducts(data);
+  };
 
   const handleEdit = (product: any) => {
-    setSelectedProduct(product)
-    setIsModalOpen(true)
-  }
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
 
   const handleCreate = () => {
-    setSelectedProduct(null)
-    setIsModalOpen(true)
-  }
+    setSelectedProduct(null);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
-    loadProducts()
-  }, [])
+    loadProducts();
+  }, []);
 
   return (
-    <div className="h-screen flex flex-col items-center pt-20">
+    <div className="flex flex-col items-center lg:mt-20 mt-40 pb-10">
       <button
         onMouseDown={handleCreate}
-        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-5"
+        className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-tertiary transition-colors font-semibold duration-300"
       >
         + Añadir Producto
       </button>
@@ -43,7 +43,7 @@ export const AdminProducts = () => {
         loadProducts={loadProducts}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full px-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full px-4 mt-6 ">
         {products.map((product: any) => (
           <div
             key={product.id}
@@ -55,5 +55,5 @@ export const AdminProducts = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

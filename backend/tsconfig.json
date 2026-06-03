@@ -8,7 +8,8 @@
     "strict": true /* Habilita todas las comprobaciones estrictas */,
     "esModuleInterop": true /* Permite importar CommonJS correctamente */,
     "forceConsistentCasingInFileNames": true /* Asegura consistencia de mayúsculas/minúsculas en imports */,
-    "skipLibCheck": true /* Ignora chequeo de tipos en archivos de librería */
+    "skipLibCheck": true /* Ignora chequeo de tipos en archivos de librería */,
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src/**/*"] /* Incluye todos los archivos TS en src */,
   "exclude": ["node_modules", "dist"] /* Excluye node_modules y dist */
